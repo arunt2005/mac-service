@@ -1,3 +1,34 @@
 spring:
   application:
     name: mac-service
+
+  kafka:
+    # Use the service name 'kafka' defined in docker-compose.yml
+    bootstrap-servers: kafka:9092
+
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      # Sending objects as JSON
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      properties:
+        # Adds type information to headers so the consumer knows which class to use
+        spring.json.add.type.headers: true
+
+    consumer:
+      group-id: mac-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      # Receiving JSON and converting back to Java objects
+      value-deserializer: org.springframework.kafka.support.serializer.ErrorHandlingDeserializer
+      properties:
+        spring.deserializer.value.delegate.class: org.springframework.kafka.support.serializer.JsonDeserializer
+        # Allows deserialization of classes within your package
+        spring.json.trusted.packages: "com.apps.*"
+        # Optional: Map the JSON back to a specific class if not using headers
+        # spring.json.value.default.type: "com.apps.model.YourMessageClass"
+
+# Custom property for easy topic management
+app:
+  kafka:
+    topic: test-topic
